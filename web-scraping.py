@@ -166,3 +166,6 @@ df = pd.DataFrame({
 
 #Creamos un csv con los datos recuperdados.
 df.to_csv(r'C:\Users\usuario\output_prediccion.csv', index = False)
+
+
+#fin de cogido
