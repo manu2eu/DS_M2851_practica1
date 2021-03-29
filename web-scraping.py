@@ -1,4 +1,4 @@
-# Importar m�dulos
+# Importar módulos
 import requests
 import csv
 from bs4 import BeautifulSoup
@@ -6,12 +6,18 @@ from datetime import date
 from datetime import timedelta, date
 import datetime
 import pandas as pd
+import random
 
-# Direcci�n de la p�gina web
-url = "https://www.meteosat.com/tiempo/sevilla/tiempo-sevilla.html"
+# Lista de ciudades que queremos visitar
+sequence = ['Barcelona','Madrid','Sevilla','A Coruña','Pontevedra','Girona','Granada','Tenerife','Menorca','Mallorca','Valencia','Bilbao','León','Zamora','Segovia','Badajoz','Murcia','Ibiza','Gran Canaria','Asturias']
+city = random.choice(sequence)
+city
+
+# Dirección de la página web (Random city)
+url = "https://www.meteosat.com/tiempo/sevilla/tiempo-" + city  + ".html"
 # Ejecutar GET-Request
 response = requests.get(url)
-# Analizar sint�cticamente el archivo HTML de BeautifulSoup del texto fuente
+# Analizar sintácticamente el archivo HTML de BeautifulSoup del texto fuente
 soap = BeautifulSoup(response.text, 'html.parser')
 
 tablaDatos = soap.find_all(id='forecast') # generamos un objeto soap con los datos de la "forecast"
@@ -138,7 +144,7 @@ fechaList= list() #lista para las fechas
 diaAux= date.today() #variable para fechas.
 
 #recorremos la lista de horas para informar la lista de fechas
-#cuando llegamos a la hora 00 , a�adimos un dia
+#cuando llegamos a la hora 00 , añadimos un dia
 for h in horaList:
     print(h)
     if '00' in h:
