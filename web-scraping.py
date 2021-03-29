@@ -9,18 +9,23 @@ import pandas as pd
 import random
 
 # Lista de ciudades que queremos visitar
-sequence = ['Barcelona','Madrid','Sevilla','A Coruña','Pontevedra','Girona','Granada','Tenerife','Menorca','Mallorca','Valencia','Bilbao','León','Zamora','Segovia','Badajoz','Murcia','Ibiza','Gran Canaria','Asturias']
-city = random.choice(sequence)
-city
-
+sequence = ['Barcelona','Madrid','Sevilla']
+city = random.choice(sequence).lower()
+#print (city)
+#
 # Dirección de la página web (Random city)
-url = "https://www.meteosat.com/tiempo/sevilla/tiempo-" + city  + ".html"
+url = "https://www.meteosat.com/tiempo/"+ city  +"/tiempo-" + city  + ".html"
+#print (url)
+
+
+
 # Ejecutar GET-Request
 response = requests.get(url)
 # Analizar sintácticamente el archivo HTML de BeautifulSoup del texto fuente
 soap = BeautifulSoup(response.text, 'html.parser')
 
 tablaDatos = soap.find_all(id='forecast') # generamos un objeto soap con los datos de la "forecast"
+print ("Contiene datos: ", len(tablaDatos))
 
 ###auxiliares para conteo
 numRegistros = 10 #numero de registros que vamos a recuperar.
@@ -39,11 +44,14 @@ tempList= list()
 dirVientoList= list()
 velVientoList= list()
 precipitacionesList= list()
+cityList= list([city] * (numRegistros+1)) #Se genera una lista con la ciudad repetida el mismo numero de previsiones que se va a recoger.
+#print (cityList)
+
 
 
 # recorremos el objeto forecast
 for d in soap.find_all(id='forecast'):
-    print ("estamos en el forecast")
+    # print ("estamos en el forecast")
 
     ## -cabecera
     # table_thead = soap.find('thead')
@@ -82,7 +90,7 @@ for d in soap.find_all(id='forecast'):
          ###ojo se trae la cabecera.
          ##quitar: <th class="col2" colspan="2">Temperatura</th>
 
-    print ("horaList:::", horaList)
+    #print ("horaList:::", horaList)
 
     #countPlusCol4
 
@@ -96,7 +104,7 @@ for d in soap.find_all(id='forecast'):
         if (countPlusCol4 > numRegistros): #cuando superamos el numero de registros deseados salimos del loop
             break
 
-    print("tempList:::", tempList)
+    #print("tempList:::", tempList)
 
     # ###countCol5 = 0  # viento
     #
@@ -109,7 +117,7 @@ for d in soap.find_all(id='forecast'):
 
         if (countCol5 > numRegistros): #cuando superamos el numero de registros deseados salimos del loop
             break
-    print("dirVientoList",dirVientoList)
+    #print("dirVientoList",dirVientoList)
 
     # ###countCol6 = 0 #Velocidad viento
 
@@ -122,7 +130,7 @@ for d in soap.find_all(id='forecast'):
         if (countCol6 > numRegistros): #cuando superamos el numero de registros deseados salimos del loop
             break
 
-    print ("velVientoList",velVientoList)
+    #print ("velVientoList",velVientoList)
 
     #
     # ####countCol7 = 0 #precipitaciones
@@ -136,7 +144,7 @@ for d in soap.find_all(id='forecast'):
         if (countCol7 > numRegistros): #cuando superamos el numero de registros deseados salimos del loop
             break
 
-    print ("precipitacionesList", precipitacionesList)
+    #print ("precipitacionesList", precipitacionesList)
 
 
 # print ("Preparar fechas")
@@ -146,7 +154,7 @@ diaAux= date.today() #variable para fechas.
 #recorremos la lista de horas para informar la lista de fechas
 #cuando llegamos a la hora 00 , añadimos un dia
 for h in horaList:
-    print(h)
+    #print(h)
     if '00' in h:
         # print ("Son las doce cambiamos de dia")
         diaAux = diaAux + timedelta(days=1)
@@ -157,6 +165,7 @@ for h in horaList:
 # print ("fechaList", fechaList)
 # generamos un dataframe con las listas de valores recuperadas.
 df = pd.DataFrame({
+    'city': cityList,
     'fecha': fechaList,
     'hora': horaList,
     'temperatura': tempList,
@@ -173,5 +182,3 @@ df = pd.DataFrame({
 #Creamos un csv con los datos recuperdados.
 df.to_csv(r'C:\Users\usuario\output_prediccion.csv', index = False)
 
-
-#fin de cogido
