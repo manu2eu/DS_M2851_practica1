@@ -36,6 +36,7 @@ def _extract_info_from_dataframe(tabla_datos, soap):
 
     ###get tag locality
     locality = soap.find("meta", {"name": "locality"})['content']
+    locality = locality.split()[0] # We keep only the name of the city (removed ", Province Spain")
     # print("locality:::", locality)  # d.find("meta content", {"name":"locality"}))
     cityList = list([locality] * (num_registros + 1)) #create a list , with the same "locality" and lenght "num_registros"
     print("cityList:::", cityList)
