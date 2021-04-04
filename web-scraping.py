@@ -165,6 +165,23 @@ def main():
 
     ax.legend()
     plt.show()
+    
+    # km/h Removed
+    data['velViento'] =  data['velViento'].str.split(r"km/h", expand=True)
+    # Wind Speed set as numeric
+    data['velViento'] = pd.to_numeric(data['velViento'])
+    data_madrid = data[data['locality'] == "Madrid"]
+    data_Bcn = data[data['locality'] == "Barcelona"]
+    data_malaga = data[data['locality'] == "Málaga"]
+    data_sevilla = data[data['locality'] == "Sevilla"]
+    # multiple line plots
+    plt.plot('hora', 'velViento', data=data_madrid, marker='',color='red', linewidth=2, label="Madrid")
+    plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black',linewidth=2, label="Barcelona")
+    plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2, label="Málaga")
+    plt.plot('hora', 'velViento', data=data_sevilla, marker='', color='olive', linewidth=2,linestyle='dashed', label="Sevilla")
+    plt.suptitle("Velocidad del viento")
+    plt.legend()
+    plt.show()
 
 if __name__ == '__main__':
     main()
