@@ -3,6 +3,7 @@ from datetime import timedelta, date
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
 
 num_registros = 10  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/data.csv'
