@@ -154,6 +154,10 @@ def main():
     
     # Chart grouped by Locality
     data = pd.concat([data, df])
+    # Degree Celcius symbol removed
+    data['temperatura'] = data['temperatura'].str.split(r"°", expand=True)
+    # Temperatures set as numeric
+    data['temperatura'] = pd.to_numeric(data['temperatura'])
     fig, ax = plt.subplots()
     print(data.head(20))
     for key, grp in data.groupby(['locality']):
