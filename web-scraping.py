@@ -37,6 +37,7 @@ def _extract_info_from_dataframe(tabla_datos, soap):
     ###get tag locality
     locality = soap.find("meta", {"name": "locality"})['content']
     locality = locality.split()[0] # We keep only the name of the city (removed ", Province Spain")
+    locality =  locality.replace(',','') # Comma remmoved
     # print("locality:::", locality)  # d.find("meta content", {"name":"locality"}))
     cityList = list([locality] * (num_registros + 1)) #create a list , with the same "locality" and lenght "num_registros"
     print("cityList:::", cityList)
@@ -150,6 +151,16 @@ def main():
         data = pd.concat([data, df])
     #print("data : ", data)
     write_dataframe_to_csv(data)
+    
+    # Chart grouped by Locality
+    data = pd.concat([data, df])
+    fig, ax = plt.subplots()
+    print(data.head(20))
+    for key, grp in data.groupby(['locality']):
+        ax.plot(grp['hora'], grp['temperatura'], label=key)
+
+    ax.legend()
+    plt.show()
 
 if __name__ == '__main__':
     main()
