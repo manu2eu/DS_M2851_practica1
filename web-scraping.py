@@ -3,6 +3,7 @@ from datetime import timedelta, date
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+import matplotlib.pyplot as plt
 
 num_registros = 10  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/data.csv'
@@ -36,6 +37,8 @@ def _extract_info_from_dataframe(tabla_datos, soap):
 
     ###get tag locality
     locality = soap.find("meta", {"name": "locality"})['content']
+    locality = locality.split()[0] # We keep only the name of the city (removed ", Province Spain")
+    locality =  locality.replace(',','') # Comma remmoved
     # print("locality:::", locality)  # d.find("meta content", {"name":"locality"}))
     cityList = list([locality] * (num_registros + 1)) #create a list , with the same "locality" and lenght "num_registros"
     print("cityList:::", cityList)
@@ -149,6 +152,37 @@ def main():
         data = pd.concat([data, df])
     #print("data : ", data)
     write_dataframe_to_csv(data)
+    
+    # Chart grouped by Locality
+    data = pd.concat([data, df])
+    # Degree Celcius symbol removed
+    data['temperatura'] = data['temperatura'].str.split(r"°", expand=True)
+    # Temperatures set as numeric
+    data['temperatura'] = pd.to_numeric(data['temperatura'])
+    fig, ax = plt.subplots()
+    print(data.head(20))
+    for key, grp in data.groupby(['locality']):
+        ax.plot(grp['hora'], grp['temperatura'], label=key)
+
+    ax.legend()
+    plt.show()
+    
+    # km/h Removed
+    data['velViento'] =  data['velViento'].str.split(r"km/h", expand=True)
+    # Wind Speed set as numeric
+    data['velViento'] = pd.to_numeric(data['velViento'])
+    data_madrid = data[data['locality'] == "Madrid"]
+    data_Bcn = data[data['locality'] == "Barcelona"]
+    data_malaga = data[data['locality'] == "Málaga"]
+    data_sevilla = data[data['locality'] == "Sevilla"]
+    # multiple line plots
+    plt.plot('hora', 'velViento', data=data_madrid, marker='',color='red', linewidth=2, label="Madrid")
+    plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black',linewidth=2, label="Barcelona")
+    plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2, label="Málaga")
+    plt.plot('hora', 'velViento', data=data_sevilla, marker='', color='olive', linewidth=2,linestyle='dashed', label="Sevilla")
+    plt.suptitle("Velocidad del viento")
+    plt.legend()
+    plt.show()
 
 if __name__ == '__main__':
     main()
