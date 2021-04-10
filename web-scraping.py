@@ -9,7 +9,7 @@ num_registros = 12  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/'
 
 
-# path = 'C:\Users\elena\data.csv'
+# path = 'C:\Users\elena\'
 
 def get_city_url(city_name: str) -> str:
     """Get the url where to make the api request"""
@@ -195,7 +195,7 @@ def main():
     # print("data : ", data)
     write_dataframe_to_csv('data.csv',data)
 
-
+    #funcion para generar listado de ciudades disponibles en la web.
     get_CitiesAvailable()
 
     # Chart grouped by Locality
