@@ -6,8 +6,10 @@ from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
 num_registros = 12  # numero de registros que vamos a recuperar.
-path = 'C:/Users/usuario/data.csv'
-#path = 'C:\Users\elena\data.csv' 
+path = 'C:/Users/usuario/'
+
+
+# path = 'C:\Users\elena\data.csv'
 
 def get_city_url(city_name: str) -> str:
     """Get the url where to make the api request"""
@@ -18,6 +20,7 @@ def get_city_url(city_name: str) -> str:
 def make_request(url: str):
     """Make http request to provided url"""
     print("make_request")
+
     return requests.get(url)
 
 
@@ -34,18 +37,18 @@ def _extract_info_from_dataframe(tabla_datos, soap):
     velVientoList = list()
     precipitacionesList = list()
 
-
     ###get tag locality
     locality = soap.find("meta", {"name": "locality"})['content']
-    locality = locality.split()[0] # We keep only the name of the city (removed ", Province Spain")
-    locality =  locality.replace(',','') # Comma remmoved
+    locality = locality.split()[0]  # We keep only the name of the city (removed ", Province Spain")
+    locality = locality.replace(',', '')  # Comma remmoved
     # print("locality:::", locality)  # d.find("meta content", {"name":"locality"}))
-    cityList = list([locality] * (num_registros + 1)) #create a list , with the same "locality" and lenght "num_registros"
+    cityList = list(
+        [locality] * (num_registros + 1))  # create a list , with the same "locality" and lenght "num_registros"
     print("cityList:::", cityList)
 
     # recorremos el objeto forecast
     for d in soap.find_all(id='forecast'):
- 
+
         # Recorremos  los objetos de la clase "col2" en el que almacena la hora
         for col2 in d.find_all('th', class_='col2'):
             if 'colspan' not in col2.attrs:  # Se observa que existen registros que contienen el atributo colspan, que no se quieren recurperar
@@ -81,7 +84,7 @@ def _extract_info_from_dataframe(tabla_datos, soap):
                 break
 
         city = d.find('th', class_='v col1').text
-        #print("city:::", d.find('th', class_='v col1').text)
+        # print("city:::", d.find('th', class_='v col1').text)
 
         # Recorremos  los objetos de la clase "col7" que almacena la cantidad de precipitaciones
         for col7 in d.find_all('td', class_='col7'):
@@ -90,7 +93,6 @@ def _extract_info_from_dataframe(tabla_datos, soap):
             precipatations += 1
             if (precipatations > num_registros):  # cuando superamos el numero de registros deseados salimos del loop
                 break
-
 
     fechaList = list()  # lista para las fechas
     diaAux = date.today()  # variable para fechas.
@@ -123,16 +125,54 @@ def parse_data(response):
     """"""
     # Analizar sintacticamente el archivo HTML de BeautifulSoup del texto fuente
     soap = BeautifulSoup(response.text, 'html.parser')
+    ##print ("parse_data:: prueba soap" ,soap)
+
+
 
     tabla_datos = soap.find_all(id='forecast')
-    df = _extract_info_from_dataframe(tabla_datos, soap)
-    # print ("parse_data::::", df)
+    print ("long de tabla : tabla_datos :forecast", tabla_datos)
+    print("long dforecast", len(tabla_datos))
+    if len(tabla_datos) > 0:
+        df = _extract_info_from_dataframe(tabla_datos, soap)
+        # print ("parse_data::::", df)
+
+    else:
+        print("No traemos datos")
+        df = pd.DataFrame()
+
+
     return df
 
 
-def write_dataframe_to_csv(df: pd.DataFrame) -> None:
+def write_dataframe_to_csv(nameFile,df: pd.DataFrame) -> None:
     """Write Pandas DataFrame into disk"""
-    df.to_csv(path, index=False, encoding='utf-16', sep=';')
+    df.to_csv(path+nameFile , index=False, encoding='utf-16', sep=';')
+
+
+def get_CitiesAvailable ():
+    url = "https://www.meteosat.com/"
+    response = requests.get(url)
+    soap = BeautifulSoup(response.text, 'html.parser')
+    linksCitiesAvailable = list()
+    listCitiesAvailable = list()
+
+    for d in soap.find_all('div', attrs={'class': 'clearfix'}):
+        # print (datosSeleccioneProvincia)
+        for li in d.find_all('li'):
+            print(li.text)
+            listCitiesAvailable.append(li.text)
+            # print(li)
+            if li.find('a'):
+                a = li.find('a')
+                print(a['href'])
+                linksCitiesAvailable.append(a['href'])
+
+    df_CitiesAvailable = pd.DataFrame({
+        'ciudad': listCitiesAvailable,
+        'link': linksCitiesAvailable
+    })
+    print (df_CitiesAvailable)
+    write_dataframe_to_csv('citiesAvailable.csv', df_CitiesAvailable)
 
 
 
@@ -146,13 +186,18 @@ def main():
     # retrieve data
     for city_url in cities_urls:
         response = make_request(city_url)
+
+        print ("response status" , response.status_code)
         # parse data
         df = parse_data(response)
         # data.append(df)
         data = pd.concat([data, df])
-    #print("data : ", data)
-    write_dataframe_to_csv(data)
-    
+    # print("data : ", data)
+    write_dataframe_to_csv('data.csv',data)
+
+
+    get_CitiesAvailable()
+
     # Chart grouped by Locality
     data = pd.concat([data, df])
     # Degree Celcius symbol removed
@@ -166,12 +211,12 @@ def main():
 
     ax.legend()
     plt.show()
-    
+
     # km/h Removed
-    data['velViento'] =  data['velViento'].str.split(r"km/h", expand=True)
+    data['velViento'] = data['velViento'].str.split(r"km/h", expand=True)
     # Wind Speed set as numeric
     data['velViento'] = pd.to_numeric(data['velViento'])
-    
+
     # l/m2 Removed (precipitaciones)
     data['precipitaciones'] = data['precipitaciones'].str.split(r"l/m2", expand=True)
     # Precipiaciones set as numeric
@@ -184,14 +229,15 @@ def main():
     data_sevilla = data[data['locality'] == "Sevilla"]
 
     # multiple line plots Viento
-    plt.plot('hora', 'velViento', data=data_madrid, marker='',color='red', linewidth=2, label="Madrid")
-    plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black',linewidth=2, label="Barcelona")
-    plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2, label="Málaga")
-    plt.plot('hora', 'velViento', data=data_sevilla, marker='', color='olive', linewidth=2,linestyle='dashed', label="Sevilla")
+    plt.plot('hora', 'velViento', data=data_madrid, marker='', color='red', linewidth=2, label="Madrid")
+    plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black', linewidth=2, label="Barcelona")
+    plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2,
+             label="Málaga")
+    plt.plot('hora', 'velViento', data=data_sevilla, marker='', color='olive', linewidth=2, linestyle='dashed',
+             label="Sevilla")
     plt.suptitle("Velocidad del viento")
     plt.legend()
     plt.show()
-
 
     # multiple line plots Precipitaciones
     plt.plot('hora', 'precipitaciones', data=data_madrid, marker='', color='red', linewidth=2, label="Madrid")
