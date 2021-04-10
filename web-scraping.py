@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
-num_registros = 10  # numero de registros que vamos a recuperar.
+num_registros = 24  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/data.csv'
 #path = 'C:\Users\elena\data.csv' 
 
@@ -171,11 +171,19 @@ def main():
     data['velViento'] =  data['velViento'].str.split(r"km/h", expand=True)
     # Wind Speed set as numeric
     data['velViento'] = pd.to_numeric(data['velViento'])
+    
+    # l/m2 Removed (precipitaciones)
+    data['precipitaciones'] = data['precipitaciones'].str.split(r"l/m2", expand=True)
+    # Precipiaciones set as numeric
+    data['precipitaciones'] = pd.to_numeric(data['precipitaciones'], errors='ignore')
+
+    # dataset split to make plots of "Viento" and "Precipipactiones"
     data_madrid = data[data['locality'] == "Madrid"]
     data_Bcn = data[data['locality'] == "Barcelona"]
     data_malaga = data[data['locality'] == "Málaga"]
     data_sevilla = data[data['locality'] == "Sevilla"]
-    # multiple line plots
+
+    # multiple line plots Viento
     plt.plot('hora', 'velViento', data=data_madrid, marker='',color='red', linewidth=2, label="Madrid")
     plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black',linewidth=2, label="Barcelona")
     plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2, label="Málaga")
@@ -183,6 +191,19 @@ def main():
     plt.suptitle("Velocidad del viento")
     plt.legend()
     plt.show()
+
+
+    # multiple line plots Precipitaciones
+    plt.plot('hora', 'precipitaciones', data=data_madrid, marker='', color='red', linewidth=2, label="Madrid")
+    plt.plot('hora', 'precipitaciones', data=data_Bcn, marker='o', color='black', linewidth=2, label="Barcelona")
+    plt.plot('hora', 'precipitaciones', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2,
+             label="Málaga")
+    plt.plot('hora', 'precipitaciones', data=data_sevilla, marker='', color='olive', linewidth=2, linestyle='dashed',
+             label="Sevilla")
+    plt.suptitle("Precipitaciones por hora")
+    plt.legend()
+    plt.show()
+
 
 if __name__ == '__main__':
     main()
