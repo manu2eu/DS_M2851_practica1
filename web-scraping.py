@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 
-num_registros = 24  # numero de registros que vamos a recuperar.
+num_registros = 12  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/data.csv'
 #path = 'C:\Users\elena\data.csv' 
 
