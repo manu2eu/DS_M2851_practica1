@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
+import numpy as np
 
 num_registros = 12  # numero de registros que vamos a recuperar.
 path = 'C:/Users/usuario/'
@@ -198,19 +199,10 @@ def main():
     #funcion para generar listado de ciudades disponibles en la web.
     get_CitiesAvailable()
 
-    # Chart grouped by Locality
-    data = pd.concat([data, df])
     # Degree Celcius symbol removed
     data['temperatura'] = data['temperatura'].str.split(r"°", expand=True)
     # Temperatures set as numeric
     data['temperatura'] = pd.to_numeric(data['temperatura'])
-    fig, ax = plt.subplots()
-    print(data.head(20))
-    for key, grp in data.groupby(['locality']):
-        ax.plot(grp['hora'], grp['temperatura'], label=key)
-
-    ax.legend()
-    plt.show()
 
     # km/h Removed
     data['velViento'] = data['velViento'].str.split(r"km/h", expand=True)
@@ -219,36 +211,50 @@ def main():
 
     # l/m2 Removed (precipitaciones)
     data['precipitaciones'] = data['precipitaciones'].str.split(r"l/m2", expand=True)
+    data['precipitaciones'] = data['precipitaciones'].str.replace(',', '.')
+
     # Precipiaciones set as numeric
     data['precipitaciones'] = pd.to_numeric(data['precipitaciones'], errors='ignore')
 
-    # dataset split to make plots of "Viento" and "Precipipactiones"
-    data_madrid = data[data['locality'] == "Madrid"]
-    data_Bcn = data[data['locality'] == "Barcelona"]
-    data_malaga = data[data['locality'] == "Málaga"]
-    data_sevilla = data[data['locality'] == "Sevilla"]
+    # # horas Removed (h)
+    data['hora'] = data['hora'].str.split(r"h", expand=True)
 
-    # multiple line plots Viento
-    plt.plot('hora', 'velViento', data=data_madrid, marker='', color='red', linewidth=2, label="Madrid")
-    plt.plot('hora', 'velViento', data=data_Bcn, marker='o', color='black', linewidth=2, label="Barcelona")
-    plt.plot('hora', 'velViento', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2,
-             label="Málaga")
-    plt.plot('hora', 'velViento', data=data_sevilla, marker='', color='olive', linewidth=2, linestyle='dashed',
-             label="Sevilla")
-    plt.suptitle("Velocidad del viento")
-    plt.legend()
+    data['fechaHora'] = data['fecha'] + '-' + data['hora']
+
+    print ("data, despues de cambios unidades: ",data)
+
+    # data group by and sum of temperature
+    df = data.groupby(['fechaHora', 'locality']).sum()['temperatura']
+
+    # plot the result
+    df.unstack().plot()
+    plt.xticks(rotation=60)
+    #plt.xticks(range(len(df.index)), df.index)
+    plt.suptitle("Temperatura (ºC) prevista por hora")
+    plt.tight_layout()
     plt.show()
 
-    # multiple line plots Precipitaciones
-    plt.plot('hora', 'precipitaciones', data=data_madrid, marker='', color='red', linewidth=2, label="Madrid")
-    plt.plot('hora', 'precipitaciones', data=data_Bcn, marker='o', color='black', linewidth=2, label="Barcelona")
-    plt.plot('hora', 'precipitaciones', data=data_malaga, marker='', markerfacecolor='blue', color='olive', linewidth=2,
-             label="Málaga")
-    plt.plot('hora', 'precipitaciones', data=data_sevilla, marker='', color='olive', linewidth=2, linestyle='dashed',
-             label="Sevilla")
-    plt.suptitle("Precipitaciones por hora")
-    plt.legend()
+    # data group by and sum of speed of wind
+    df = data.groupby(['fechaHora', 'locality']).sum()['velViento']
+
+    # plot the result
+    df.unstack().plot()
+    plt.xticks(rotation=60)
+    plt.suptitle("Velocidad del viento (km/h) prevista por hora")
+    plt.tight_layout()
     plt.show()
+
+    # data group by and sum of rain
+    df = data.groupby(['fechaHora', 'locality']).sum()['precipitaciones']
+
+    # plot the result
+    df.unstack().plot()
+    plt.xticks(rotation=60)
+    plt.suptitle("Precipitaciones (l/m2) prevista por hora")
+    plt.tight_layout()
+    plt.show()
+
+
 
 
 if __name__ == '__main__':
